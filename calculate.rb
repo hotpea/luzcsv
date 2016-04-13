@@ -5,7 +5,7 @@ require 'fileutils'
 
 def separateInArrays params 
 	validCoupons = Array.new
-	orders 		 = Array.new
+	orders 		   = Array.new
 	orderItens   = Array.new
 	products     = Array.new
 
@@ -44,18 +44,11 @@ end
 def mountOrders validCoupons, orders, orderItens, products
 	# pegar descontos
 	finalOrders = Array.new
-	idOrder = Array.new
-	idCoupon = Array.new
-	itensInOrder = Array.new
 
-	orders.each.with_index do |order, index|
-		# calcular desconto e itens por pedido, index = ID, value = final value
+	orders.each do |order|
 		idOrder, idCoupon = order.split ','
 		totalCountItems = 0
 		totalValueOrder = 0
-
-		# actual order
-		puts idOrder
 
 		# get itens for order
 		orderItens.each do |orderIten|
@@ -74,19 +67,29 @@ def mountOrders validCoupons, orders, orderItens, products
 			# calculate discounts
 			validCoupons.each do |coupon|
 				# verify if the OrderCoupon is in any coupon and coupon can be used'
-				if (coupon[0] == idOrder) and (coupon[4].to_i <= 3)
+				if (coupon[0] == idCoupon) and (coupon[4].to_i <= 3)
+					if coupon[2] == 'percent'
+						if totalCountItems > 2
+							discountInPercent = (totalCountItems * 5).to_f - 5.to_f
+							totalValueOrder = (discountInPercent - 100).to_f * totalValueOrder.to_f
+						end
+						totalValueOrder = totalValueOrder
+					else
+						totalValueOrder = totalValueOrder.to_f - coupon[1].to_f
+					end
 					# set +1 in used coupons
 					coupon[4] = coupon[4].to_i + 1
 				end
 			end
+
 		end
 
-		# actual Count of itens in order and Total Value
-		puts totalCountItems
-		puts totalValueOrder
-		puts '------------'
+
+
+		finalOrders.push idOrder.to_s + ',' + totalValueOrder.to_s
 	end
-	
+
+	writeOutput finalOrders
 end
 
 def pushToArray param, var
@@ -98,7 +101,7 @@ end
 def writeOutput toWrite
 	File.open('output_test.csv', 'w') do |file| 
 		toWrite.each do |line|
-			# file.puts line
+			file.puts line
 		end
 	end
 end
