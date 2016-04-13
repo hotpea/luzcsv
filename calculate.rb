@@ -30,7 +30,7 @@ def separateInArrays params
 				pushToArray param, orderItens
 			else
 				# stop program if invalid file is passed
-				puts 'arquivo ' + param + ' é inválido! passe arquivos válidos para o programa e tente novamente!'
+				puts 'arquivo "' + param + '" é inválido! passe arquivos válidos para o programa e tente novamente!'
 				abort
 		end
 	end
@@ -47,35 +47,44 @@ def mountOrders validCoupons, orders, orderItens, products
 	idOrder = Array.new
 	idCoupon = Array.new
 	itensInOrder = Array.new
-	
+
 	orders.each.with_index do |order, index|
 		# calcular desconto e itens por pedido, index = ID, value = final value
 		idOrder, idCoupon = order.split ','
-		
+		totalCountItems = 0
+		totalValueOrder = 0
+
+		# actual order
+		puts idOrder
+
 		# get itens for order
 		orderItens.each do |orderIten|
 			idOrderInItem, idItem = orderIten.split ','
+
 			if idOrderInItem == idOrder
-				puts idOrder + ' item here!'
 				products.each do |product|
 					idProduct, valueProduct = product.split ','
-					if idItem == idProduct
-						puts idProduct
-						puts valueProduct
-						puts '=======================' 
+					if idItem.to_i == idProduct.to_i
+						totalCountItems = totalCountItems + 1
+						totalValueOrder = totalValueOrder.to_f + valueProduct.to_f
 					end
 				end
 			end
-		end
-		
-		# calculate discounts
-		validCoupons.each do |coupon|
-			# verify if the OrderCoupon is in any coupon and coupon can be used'
-			if (coupon[0] == idOrder) and (coupon[4].to_i <= 3)
-				# set +1 in used coupons
-				coupon[4] = coupon[4].to_i + 1
+
+			# calculate discounts
+			validCoupons.each do |coupon|
+				# verify if the OrderCoupon is in any coupon and coupon can be used'
+				if (coupon[0] == idOrder) and (coupon[4].to_i <= 3)
+					# set +1 in used coupons
+					coupon[4] = coupon[4].to_i + 1
+				end
 			end
 		end
+
+		# actual Count of itens in order and Total Value
+		puts totalCountItems
+		puts totalValueOrder
+		puts '------------'
 	end
 	
 end
