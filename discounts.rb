@@ -13,6 +13,4 @@ def verifyIfValidDiscount param, validCoupons
 			validCoupons.push data
 		end
 	end
-	
-	validCoupons
 end 

@@ -4,6 +4,11 @@ require 'date'
 require 'fileutils'
 
 def separateInArrays params 
+	validCoupons = Array.new
+	orders 		 = Array.new
+	orderItens   = Array.new
+	products     = Array.new
+
 	params.each do |param|
 		# fazer tratamento para cada tipo de arquivo diferente
 		# Separar pedidos no arquivo order(aqui temos o ID dos pedidos)
@@ -12,14 +17,9 @@ def separateInArrays params
 		# verificar os descontos no arquivo de descontos, devem ser usados os descontos na ordem que aparecem:
 		# OBS: Prestar atenção nos descontos vencidos e;ou já usados, o mesmo desconto só pode ser usado no max 3x. 
 		
-		validCoupons = Array.new
-		orders 		 = Array.new
-		orderItens   = Array.new
-		products     = Array.new
-		
 		case param
 			when 'coupons.csv'
-				validCoupons = verifyIfValidDiscount param, validCoupons
+				verifyIfValidDiscount param, validCoupons
 			when 'order_items.csv'
 				pushToArray param, orderItens
 			when 'orders.csv'
@@ -33,32 +33,63 @@ def separateInArrays params
 				puts 'arquivo ' + param + ' é inválido! passe arquivos válidos para o programa e tente novamente!'
 				abort
 		end
-		
-		mountOrders validCoupons, orders, orderItens, products
-		
-		# montar array com os valores finais dos pedidos e passar para writeOutput
-		# writeOutput finalValues
 	end
+	
+	mountOrders validCoupons, orders, orderItens, products
+		
+	# montar array com os valores finais dos pedidos e passar para writeOutput
+	# writeOutput finalValues
 end
 
 def mountOrders validCoupons, orders, orderItens, products
+	# pegar descontos
 	finalOrders = Array.new
-	orders.each do |order|
+	idOrder = Array.new
+	idCoupon = Array.new
+	itensInOrder = Array.new
+	
+	orders.each.with_index do |order, index|
 		# calcular desconto e itens por pedido, index = ID, value = final value
-		finalOrders[order[0]] = 'valor final'
+		idOrder, idCoupon = order.split ','
+		
+		# get itens for order
+		orderItens.each do |orderIten|
+			idOrderInItem, idItem = orderIten.split ','
+			if idOrderInItem == idOrder
+				puts idOrder + ' item here!'
+				products.each do |product|
+					idProduct, valueProduct = product.split ','
+					if idItem == idProduct
+						puts idProduct
+						puts valueProduct
+						puts '=======================' 
+					end
+				end
+			end
+		end
+		
+		# calculate discounts
+		validCoupons.each do |coupon|
+			# verify if the OrderCoupon is in any coupon and coupon can be used'
+			if (coupon[0] == idOrder) and (coupon[4].to_i <= 3)
+				# set +1 in used coupons
+				coupon[4] = coupon[4].to_i + 1
+			end
+		end
 	end
+	
 end
 
 def pushToArray param, var
 	File.foreach(param).each(sep="\r") do |line|
-		var.push line.split ','
+		var.push line
 	end
 end
 
 def writeOutput toWrite
 	File.open('output_test.csv', 'w') do |file| 
 		toWrite.each do |line|
-			file.puts line
+			# file.puts line
 		end
 	end
 end
