@@ -4,5 +4,8 @@ load 'calculate.rb'
 params = ARGV
 
 # class calculate
-separateInArrays params
+validCoupons, orders, orderItems, products, outputFile  = separateInArrays params
+finalOrders, outputFile                                 = mountOrders validCoupons, orders, orderItems, products, outputFile
+writeOutput finalOrders, outputFile
+
 

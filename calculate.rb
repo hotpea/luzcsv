@@ -1,8 +1,11 @@
 load 'discounts.rb'
+load 'orders.rb'
 
 require 'date'
 require 'fileutils'
 
+
+# separate data in archives in arrays to easy manipulation
 def separateInArrays params 
 	validCoupons = Array.new
 	orders 		   = Array.new
@@ -11,14 +14,6 @@ def separateInArrays params
 	outputFile = nil
 
 	params.each do |param|
-		# fazer tratamento para cada tipo de arquivo diferente
-		# Separar pedidos no arquivo order(aqui temos o ID dos pedidos)
-		# verificar os itens no arquivo order_itens(aqui temos o id do item e id do pedido)
-		# pegar os preços no arquivo products de acordo com os itens do pedido(aqui temos os preços de cada produto)
-		# verificar os descontos no arquivo de descontos, devem ser usados os descontos na ordem que aparecem:
-		# OBS: Prestar atenção nos descontos vencidos e;ou já usados, o mesmo desconto só pode ser usado no max 3x. 
-
-
 		case param
 			when 'coupons.csv'
 				verifyIfValidDiscount param, validCoupons
@@ -38,7 +33,7 @@ def separateInArrays params
 		end
 	end
 	
-	mountOrders validCoupons, orders, orderItems, products, outputFile
+	return validCoupons, orders, orderItems, products, outputFile
 end
 
 def mountOrders validCoupons, orders, orderItems, products, outputFile
@@ -47,48 +42,13 @@ def mountOrders validCoupons, orders, orderItems, products, outputFile
 
 	orders.each do |order|
 		idOrder, idCoupon = order.split ','
-		totalCountItems = 0
-		totalValueOrder = 0
+		totalCountItems, totalValueOrder = getItemsFromOrder orderItems, idOrder, products
+		totalValueOrder = calculateDiscounts validCoupons, idCoupon, totalCountItems
 
-		# get itens for order
-		orderItems.each do |orderItem|
-			idOrderInItem, idItem = orderItem.split ','
-
-			if idOrderInItem.to_i == idOrder.to_i
-				products.each do |product|
-					idProduct, valueProduct = product.split ','
-					if idItem.to_i == idProduct.to_i
-						totalCountItems = totalCountItems + 1
-						totalValueOrder = totalValueOrder.to_f + valueProduct.to_f
-					end
-				end
-			end
-		end
-
-		# calculate discounts
-		validCoupons.each do |coupon|
-			# verify if the OrderCoupon is in any coupon and coupon can be used'
-			if (coupon[0].to_i == idCoupon.to_i) and (coupon[4].to_i <= 3)
-				if coupon[2] == 'percent'
-					if totalCountItems > 1
-						discountInPercent = (totalCountItems * 5).to_f
-						# don't make discounts bigger than 40%
-						if discountInPercent > 40
-							discountInPercent = 40
-						end
-						totalValueOrder = (100 - discountInPercent).to_f * (totalValueOrder.to_f / 100)
-					end
-					totalValueOrder = totalValueOrder
-				else
-					totalValueOrder = totalValueOrder.to_f - coupon[1].to_f
-				end
-				# set +1 in used coupons
-				coupon[4] = coupon[4].to_i + 1
-			end
-		end
 		finalOrders.push idOrder.to_s + ',' + totalValueOrder.to_s
 	end
-	writeOutput finalOrders, outputFile
+
+	return finalOrders, outputFile
 end
 
 def pushToArray param, var
