@@ -1,7 +1,7 @@
 # Sobre #
 
 Programa para cálculo de pedidos levando em conta quantidade de itens e seus valores separados tal como aplicação de desconto com base em cupons.
-Feito em Ruby(testado na versão 2.3.0p0) para fins de teste para contratação pela empresa LUZ(luz.vc) para cargo de desenvolvedor Senior.
+Feito em Ruby(testado na versão 2.3.0p0) para fins de teste para contratação pela empresa LUZ(https://luz.vc/) para cargo de desenvolvedor Senior.
 
 # executando o programa #
 
