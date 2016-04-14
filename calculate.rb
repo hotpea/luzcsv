@@ -6,7 +6,7 @@ require 'fileutils'
 def separateInArrays params 
 	validCoupons = Array.new
 	orders 		   = Array.new
-	orderItens   = Array.new
+	orderItems   = Array.new
 	products     = Array.new
 
 	params.each do |param|
@@ -21,13 +21,13 @@ def separateInArrays params
 			when 'coupons.csv'
 				verifyIfValidDiscount param, validCoupons
 			when 'order_items.csv'
-				pushToArray param, orderItens
+				pushToArray param, orderItems
 			when 'orders.csv'
 				pushToArray param, orders
 			when 'products.csv'
 				pushToArray param, products
 			when 'output_test.csv'
-				pushToArray param, orderItens
+				pushToArray param, orderItems
 			else
 				# stop program if invalid file is passed
 				puts 'arquivo "' + param + '" é inválido! passe arquivos válidos para o programa e tente novamente!'
@@ -35,13 +35,13 @@ def separateInArrays params
 		end
 	end
 	
-	mountOrders validCoupons, orders, orderItens, products
+	mountOrders validCoupons, orders, orderItems, products
 		
 	# montar array com os valores finais dos pedidos e passar para writeOutput
 	# writeOutput finalValues
 end
 
-def mountOrders validCoupons, orders, orderItens, products
+def mountOrders validCoupons, orders, orderItems, products
 	# pegar descontos
 	finalOrders = Array.new
 
@@ -51,10 +51,10 @@ def mountOrders validCoupons, orders, orderItens, products
 		totalValueOrder = 0
 
 		# get itens for order
-		orderItens.each do |orderIten|
-			idOrderInItem, idItem = orderIten.split ','
+		orderItems.each do |orderItem|
+			idOrderInItem, idItem = orderItem.split ','
 
-			if idOrderInItem == idOrder
+			if idOrderInItem.to_i == idOrder.to_i
 				products.each do |product|
 					idProduct, valueProduct = product.split ','
 					if idItem.to_i == idProduct.to_i
@@ -63,32 +63,30 @@ def mountOrders validCoupons, orders, orderItens, products
 					end
 				end
 			end
-
-			# calculate discounts
-			validCoupons.each do |coupon|
-				# verify if the OrderCoupon is in any coupon and coupon can be used'
-				if (coupon[0] == idCoupon) and (coupon[4].to_i <= 3)
-					if coupon[2] == 'percent'
-						if totalCountItems > 2
-							discountInPercent = (totalCountItems * 5).to_f - 5.to_f
-							totalValueOrder = (discountInPercent - 100).to_f * totalValueOrder.to_f
-						end
-						totalValueOrder = totalValueOrder
-					else
-						totalValueOrder = totalValueOrder.to_f - coupon[1].to_f
-					end
-					# set +1 in used coupons
-					coupon[4] = coupon[4].to_i + 1
-				end
-			end
-
 		end
 
-
-
+		# calculate discounts
+		validCoupons.each do |coupon|
+			# puts idOrder.to_s + '___1'
+			# verify if the OrderCoupon is in any coupon and coupon can be used'
+			if (coupon[0].to_i == idCoupon.to_i) and (coupon[4].to_i <= 3)
+				# puts idOrder.to_s + '___2'
+				if coupon[2] == 'percent'
+					# puts idOrder.to_s + '___3'
+					if totalCountItems > 1
+						discountInPercent = (totalCountItems * 5).to_f
+						totalValueOrder = (100 - discountInPercent).to_f * (totalValueOrder.to_f / 100)
+					end
+					totalValueOrder = totalValueOrder
+				else
+					totalValueOrder = totalValueOrder.to_f - coupon[1].to_f
+				end
+				# set +1 in used coupons
+				coupon[4] = coupon[4].to_i + 1
+			end
+		end
 		finalOrders.push idOrder.to_s + ',' + totalValueOrder.to_s
 	end
-
 	writeOutput finalOrders
 end
 
